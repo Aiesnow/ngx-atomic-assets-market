@@ -23,6 +23,7 @@ import {
   sale,
   transfer
 } from "../test/atomic-asset.mock";
+import {ATOMIC_ASSETS_MARKET_CONFIG} from "./atomic-assets.config";
 
 describe('AtomicAssetsService', () => {
   let service: AtomicAssetsMarketService;
@@ -30,7 +31,13 @@ describe('AtomicAssetsService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule]
+      imports: [HttpClientTestingModule],
+      providers: [
+        {
+          provide: ATOMIC_ASSETS_MARKET_CONFIG,
+          useValue: '',
+        }
+      ]
     });
     service = TestBed.inject(AtomicAssetsMarketService);
     httpMock = TestBed.inject(HttpTestingController);
