@@ -17,7 +17,13 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
+    "paths": {
+      "ng-atomic-assets": [
+        "dist/ng-atomic-assets/ng-atomic-assets",
+        "dist/ng-atomic-assets"
+      ]
+    }
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,
