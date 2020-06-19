@@ -24,8 +24,10 @@ export class AtomicAssetsMarketService {
     const newParams: Record<string, string> = {}
     for(let key of Object.keys(params)) {
       if(Array.isArray(params[key])) {
-        newParams[key] = (params[key] as (string | number)[]).map(elem => elem.toString()).join(',');
-      } else {
+        if(params[key].length > 0) {
+          newParams[key] = (params[key] as (string | number)[]).map(elem => elem.toString()).join(',');
+        }
+      } else if(params[key] != null && params[key].toString() !== '') {
         newParams[key] = params[key].toString();
       }
     }

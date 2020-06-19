@@ -1,0 +1,565 @@
+<h1>Unofficial AtomicAssets Market API Angular wrapper</h1>
+<a mat-raised-button target="_blank" href="https://test.wax.api.atomicassets.io/atomicmarket/docs/swagger/">Official Swagger API*</a> * Due to the project still being in development, "nothing is 100% set in stone yet" :)
+<mat-accordion *ngIf="(result$ | async)">
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>Result</mat-panel-title>
+    </mat-expansion-panel-header>
+
+    <ngx-json-viewer [json]="(result$ | async) || {}" [expanded]="false"></ngx-json-viewer>
+  </mat-expansion-panel>
+  <div class="clearfix"></div>
+</mat-accordion>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get auctions</mat-card-title>
+    <mat-card-subtitle>Filtered & paginated list of Auctions</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Filters
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <form [formGroup]="auctionParamsForm">
+          <mat-form-field>
+            <mat-select formControlName="state" placeholder="State">
+              <mat-option *ngFor="let state of auctionStates" [value]="state.value">
+                {{state.viewValue}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Max assets" formControlName="max_assets">
+          </mat-form-field>
+
+          <mat-checkbox formControlName="show_blacklisted">Show blacklisted</mat-checkbox>
+
+          <mat-checkbox formControlName="whitelisted_collections_only">Show whitelisted collections only</mat-checkbox>
+
+          <mat-checkbox formControlName="whitelisted_seller_only">Show whitelisted seller only</mat-checkbox>
+
+          <mat-checkbox formControlName="whitelisted_only">Show whitelisted only</mat-checkbox>
+
+          <mat-form-field>
+            <mat-chip-list #chipList1>
+              <mat-chip *ngFor="let chip of auctionParamsForm.get('marketplace').value" [removable]="true" (removed)="removeChip(auctionParamsForm, 'marketplace', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Marketplaces" [matChipInputFor]="chipList1" (matChipInputTokenEnd)="addChip(auctionParamsForm, 'marketplace', $event)">
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-chip-list #chipList2>
+              <mat-chip *ngFor="let chip of auctionParamsForm.get('maker_marketplace').value" [removable]="true" (removed)="removeChip(auctionParamsForm, 'maker_marketplace', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Maker marketplaces" [matChipInputFor]="chipList2" (matChipInputTokenEnd)="addChip(auctionParamsForm, 'maker_marketplace', $event)">
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-chip-list #chipList3>
+              <mat-chip *ngFor="let chip of auctionParamsForm.get('taker_marketplace').value" [removable]="true" (removed)="removeChip(auctionParamsForm, 'taker_marketplace', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Taker marketplaces" [matChipInputFor]="chipList3" (matChipInputTokenEnd)="addChip(auctionParamsForm, 'taker_marketplace', $event)">
+          </mat-form-field>
+
+          <mat-form-field>
+            <input matInput type="text" placeholder="Symbol" formControlName="symbol">
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-chip-list #chipList4>
+              <mat-chip *ngFor="let chip of auctionParamsForm.get('seller').value" [removable]="true" (removed)="removeChip(auctionParamsForm, 'seller', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Sellers" [matChipInputFor]="chipList4" (matChipInputTokenEnd)="addChip(auctionParamsForm, 'seller', $event)">
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-chip-list #chipList5>
+              <mat-chip *ngFor="let chip of auctionParamsForm.get('buyer').value" [removable]="true" (removed)="removeChip(auctionParamsForm, 'buyer', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Buyers" [matChipInputFor]="chipList5" (matChipInputTokenEnd)="addChip(auctionParamsForm, 'buyer', $event)">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Min price" formControlName="min_price">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Max price" formControlName="max_price">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Owner" formControlName="owner">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Collection name" formControlName="collection_name">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Schema name" formControlName="schema_name">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Template ID" formControlName="template_id">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Match" formControlName="match">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Sort by" formControlName="sort">
+              <mat-option [value]="null"></mat-option>
+              <mat-option *ngFor="let auctionSort of auctionSorts" [value]="auctionSort.value">{{auctionSort.viewValue}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Page" formControlName="page">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Limit" formControlName="limit">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Order" formControlName="order">
+              <mat-option *ngFor="let sortOrder of sortOrders" [value]="sortOrder.value">{{sortOrder.viewValue}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </form>
+
+      </mat-expansion-panel>
+    </mat-accordion>
+    <button mat-raised-button color="primary" (click)="getAuctions()">Send resquest</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get auction by ID</mat-card-title>
+    <mat-card-subtitle>Single Auction</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-form-field>
+      <input matInput placeholder="Auction ID" #auctionId type="number">
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="getAuctionById(auctionId.value)" [disabled]="!auctionId.value">Send resquest</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get sales</mat-card-title>
+    <mat-card-subtitle>Filtered & paginated list of Sales</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Filters
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+
+        <form [formGroup]="saleParamsForm">
+          <mat-form-field>
+            <mat-select formControlName="state" placeholder="State">
+              <mat-option *ngFor="let state of auctionStates" [value]="state.value">
+                {{state.viewValue}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Max assets" formControlName="max_assets">
+          </mat-form-field>
+
+          <mat-checkbox formControlName="show_blacklisted">Show blacklisted</mat-checkbox>
+
+          <mat-checkbox formControlName="whitelisted_collections_only">Show whitelisted collections only</mat-checkbox>
+
+          <mat-checkbox formControlName="whitelisted_seller_only">Show whitelisted seller only</mat-checkbox>
+
+          <mat-checkbox formControlName="whitelisted_only">Show whitelisted only</mat-checkbox>
+
+          <mat-form-field>
+            <mat-chip-list #chipList6>
+              <mat-chip *ngFor="let chip of saleParamsForm.get('marketplace').value" [removable]="true" (removed)="removeChip(saleParamsForm, 'marketplace', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Marketplaces" [matChipInputFor]="chipList6" (matChipInputTokenEnd)="addChip(saleParamsForm, 'marketplace', $event)">
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-chip-list #chipList7>
+              <mat-chip *ngFor="let chip of saleParamsForm.get('maker_marketplace').value" [removable]="true" (removed)="removeChip(saleParamsForm, 'maker_marketplace', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Maker marketplaces" [matChipInputFor]="chipList7" (matChipInputTokenEnd)="addChip(saleParamsForm, 'maker_marketplace', $event)">
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-chip-list #chipList8>
+              <mat-chip *ngFor="let chip of saleParamsForm.get('taker_marketplace').value" [removable]="true" (removed)="removeChip(saleParamsForm, 'taker_marketplace', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Taker marketplaces" [matChipInputFor]="chipList8" (matChipInputTokenEnd)="addChip(saleParamsForm, 'taker_marketplace', $event)">
+          </mat-form-field>
+
+          <mat-form-field>
+            <input matInput type="text" placeholder="Symbol" formControlName="symbol">
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-chip-list #chipList9>
+              <mat-chip *ngFor="let chip of saleParamsForm.get('seller').value" [removable]="true" (removed)="removeChip(saleParamsForm, 'seller', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Sellers" [matChipInputFor]="chipList9" (matChipInputTokenEnd)="addChip(saleParamsForm, 'seller', $event)">
+          </mat-form-field>
+
+          <mat-form-field>
+            <mat-chip-list #chipList10>
+              <mat-chip *ngFor="let chip of saleParamsForm.get('buyer').value" [removable]="true" (removed)="removeChip(saleParamsForm, 'buyer', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Buyers" [matChipInputFor]="chipList10" (matChipInputTokenEnd)="addChip(saleParamsForm, 'buyer', $event)">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Min price" formControlName="min_price">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Max price" formControlName="max_price">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Owner" formControlName="owner">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Collection name" formControlName="collection_name">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Schema name" formControlName="schema_name">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Template ID" formControlName="template_id">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Match" formControlName="match">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Sort by" formControlName="sort">
+              <mat-option [value]="null"></mat-option>
+              <mat-option *ngFor="let saleSort of saleSorts" [value]="saleSort.value">{{saleSort.viewValue}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Page" formControlName="page">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Limit" formControlName="limit">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Order" formControlName="order">
+              <mat-option *ngFor="let sortOrder of sortOrders" [value]="sortOrder.value">{{sortOrder.viewValue}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </form>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <button mat-raised-button color="primary" (click)="getSales()">Send resquest</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get sale by ID</mat-card-title>
+    <mat-card-subtitle>Single Sale</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-form-field>
+      <input matInput placeholder="Sale ID" #saleId type="number">
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="getSaleById(saleId.value)" [disabled]="!saleId.value">Send resquest</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get marketplaces</mat-card-title>
+    <mat-card-subtitle>Paginated list of Marketplaces</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <button mat-raised-button color="primary" (click)="getMarketplaces()">Send resquest</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get marketplace by ID</mat-card-title>
+    <mat-card-subtitle>Single Marketplace</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-form-field>
+      <input matInput placeholder="Marketplace Name" #marketplaceName>
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="getMarketplaceByName(marketplaceName.value)">Send resquest</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get assets</mat-card-title>
+    <mat-card-subtitle>Filtered & paginated list of Assets</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Filters
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <form [formGroup]="assetParamsForm">
+          <mat-form-field>
+            <input matInput placeholder="Owner" formControlName="owner">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Collection name" formControlName="collection_name">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Schema name" formControlName="schema_name">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Template ID" formControlName="template_id">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Match" formControlName="match">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Sort by" formControlName="sort">
+              <mat-option [value]="null"></mat-option>
+              <mat-option *ngFor="let assetSort of assetSorts" [value]="assetSort.value">{{assetSort.viewValue}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Page" formControlName="page">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Limit" formControlName="limit">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Order" formControlName="order">
+              <mat-option *ngFor="let sortOrder of sortOrders" [value]="sortOrder.value">{{sortOrder.viewValue}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </form>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <button mat-raised-button color="primary" (click)="getAssets()">Send request</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get asset by ID</mat-card-title>
+    <mat-card-subtitle>Single Asset</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-form-field>
+      <input matInput placeholder="Asset ID" #assetId>
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="getAssetById(assetId.value)" [disabled]="!assetId.value">Send resquest</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get asset history by ID</mat-card-title>
+    <mat-card-subtitle>List of Asset Logs</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Filters
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <form [formGroup]="assetHistoryParamsForm">
+          <mat-form-field>
+            <input matInput placeholder="Page" formControlName="page">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Limit" formControlName="limit">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Order" formControlName="order">
+              <mat-option *ngFor="let sortOrder of sortOrders" [value]="sortOrder.value">{{sortOrder.viewValue}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </form>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <mat-form-field>
+      <input matInput placeholder="Asset ID" #assetIdLogs>
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="getAssetHistory(assetIdLogs.value)" [disabled]="!assetIdLogs.value">Send resquest</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get transfers</mat-card-title>
+    <mat-card-subtitle>Filtered & paginated list of Transfers</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Filters
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <form [formGroup]="transferParamsForm">
+          <mat-form-field>
+            <mat-chip-list #chipList11>
+              <mat-chip *ngFor="let chip of transferParamsForm.get('account').value" [removable]="true" (removed)="removeChip(transferParamsForm, 'account', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Accounts" [matChipInputFor]="chipList11" (matChipInputTokenEnd)="addChip(transferParamsForm, 'account', $event)">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-chip-list #chipList12>
+              <mat-chip *ngFor="let chip of transferParamsForm.get('sender').value" [removable]="true" (removed)="removeChip(transferParamsForm, 'sender', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Senders" [matChipInputFor]="chipList12" (matChipInputTokenEnd)="addChip(transferParamsForm, 'sender', $event)">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-chip-list #chipList13>
+              <mat-chip *ngFor="let chip of transferParamsForm.get('recipient').value" [removable]="true" (removed)="removeChip(transferParamsForm, 'recipient', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Recipients" [matChipInputFor]="chipList13" (matChipInputTokenEnd)="addChip(transferParamsForm, 'recipient', $event)">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-chip-list #chipList14>
+              <mat-chip *ngFor="let chip of transferParamsForm.get('asset_id').value" [removable]="true" (removed)="removeChip(transferParamsForm, 'asset_id', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Asset IDs" [matChipInputFor]="chipList14" (matChipInputTokenEnd)="addChip(transferParamsForm, 'asset_id', $event)">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Sort by" formControlName="sort">
+              <mat-option [value]="null"></mat-option>
+              <mat-option *ngFor="let transferSort of transferSorts" [value]="transferSort.value">{{transferSort.viewValue}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Page" formControlName="page">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Limit" formControlName="limit">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Order" formControlName="order">
+              <mat-option *ngFor="let sortOrder of sortOrders" [value]="sortOrder.value">{{sortOrder.viewValue}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </form>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <button mat-raised-button color="primary" (click)="getTransfers()">Send request</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get offers</mat-card-title>
+    <mat-card-subtitle>Filtered & paginated list of Offers</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-accordion>
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Filters
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <form [formGroup]="offerParamsForm">
+          <mat-form-field>
+            <mat-chip-list #chipList15>
+              <mat-chip *ngFor="let chip of offerParamsForm.get('account').value" [removable]="true" (removed)="removeChip(offerParamsForm, 'account', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Accounts" [matChipInputFor]="chipList15" (matChipInputTokenEnd)="addChip(offerParamsForm, 'account', $event)">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-chip-list #chipList16>
+              <mat-chip *ngFor="let chip of offerParamsForm.get('sender').value" [removable]="true" (removed)="removeChip(offerParamsForm, 'sender', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Senders" [matChipInputFor]="chipList16" (matChipInputTokenEnd)="addChip(offerParamsForm, 'sender', $event)">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-chip-list #chipList17>
+              <mat-chip *ngFor="let chip of offerParamsForm.get('recipient').value" [removable]="true" (removed)="removeChip(offerParamsForm, 'recipient', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Recipients" [matChipInputFor]="chipList17" (matChipInputTokenEnd)="addChip(offerParamsForm, 'recipient', $event)">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-chip-list #chipList18>
+              <mat-chip *ngFor="let chip of offerParamsForm.get('asset_id').value" [removable]="true" (removed)="removeChip(offerParamsForm, 'asset_id', chip)">{{chip}} <mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+            </mat-chip-list>
+            <input placeholder="Asset IDs" [matChipInputFor]="chipList18" (matChipInputTokenEnd)="addChip(offerParamsForm, 'asset_id', $event)">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select formControlName="state" [multiple]="true" placeholder="State">
+              <mat-option *ngFor="let offerState of offerStates" [value]="offerState.value">
+                {{offerState.viewValue}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Sort by" formControlName="sort">
+              <mat-option [value]="null"></mat-option>
+              <mat-option *ngFor="let offerSort of offerSorts" [value]="offerSort.value">{{offerSort.viewValue}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Page" formControlName="page">
+          </mat-form-field>
+          <mat-form-field>
+            <input matInput placeholder="Limit" formControlName="limit">
+          </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Order" formControlName="order">
+              <mat-option *ngFor="let sortOrder of sortOrders" [value]="sortOrder.value">{{sortOrder.viewValue}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </form>
+      </mat-expansion-panel>
+    </mat-accordion>
+    <button mat-raised-button color="primary" (click)="getOffers()">Send request</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get offer by ID</mat-card-title>
+    <mat-card-subtitle>Single Offer</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-form-field>
+      <input matInput placeholder="Offer ID" #offerId type="number">
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="getOfferById(offerId.value)" [disabled]="!saleId.value">Send resquest</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Get config</mat-card-title>
+    <mat-card-subtitle>Config Object</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <button mat-raised-button color="primary" (click)="getConfig()">Send resquest</button>
+  </mat-card-content>
+  <div class="clearfix"></div>
+</mat-card>

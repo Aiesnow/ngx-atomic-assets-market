@@ -1,3 +1,9 @@
+# Unofficial AtomicAssets Market API Angular wrapper
+[Official Swagger API*](https://test.wax.api.atomicassets.io/atomicmarket/docs/swagger/) 
+
+\* Due to the project still being in development, "nothing is 100% set in stone yet" :)
+
+You can find a demonstration [here](https://aiesnow.github.io/ngx-atomic-assets-market/)
 # NgAtomicAssets
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.0.2.

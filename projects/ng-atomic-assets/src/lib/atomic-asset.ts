@@ -137,26 +137,8 @@ export enum OfferSort {
   Created = 'created',
 }
 
-export interface AuctionParams extends SearchParams {
+export interface AuctionParams extends Omit<SaleParams, 'state' | 'sort'> {
   state?: AuctionState[];
-  max_assets?: number;
-  show_blacklisted?: boolean;
-  whitelisted_seller_only?: boolean;
-  whitelisted_collections_only?: boolean;
-  whitelisted_only?: boolean;
-  marketplace?: string[];
-  maker_marketplace?: string[];
-  taker_marketplace?: string[];
-  symbol?: string;
-  seller?: string[];
-  buyer?: string[];
-  min_price?: number;
-  max_price?: number;
-  owner?: string;
-  collection_name?: string;
-  schema_name?: string;
-  template_id?: number;
-  match?: string;
   sort?: AuctionSort;
 }
 
